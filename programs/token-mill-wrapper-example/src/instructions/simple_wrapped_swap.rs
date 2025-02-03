@@ -3,11 +3,11 @@ use anchor_spl::token_interface::{Mint, TokenAccount, TokenInterface};
 use token_mill::{
     cpi::accounts::PermissionedSwap,
     program::TokenMill,
-    state::{Market, TokenMillConfig},
+    state::{Market, SwapAuthorityBadge, TokenMillConfig},
     SwapAmountType, SwapType,
 };
 
-use crate::state::WrapperAuthority;
+use crate::state::WrapperSwapAuthority;
 
 #[event_cpi]
 #[derive(Accounts)]
@@ -17,7 +17,7 @@ pub struct SimpleWrappedSwap<'info> {
     #[account(mut)]
     pub market: AccountLoader<'info, Market>,
 
-    pub market_authority: Account<'info, WrapperAuthority>,
+    pub swap_authority_badge: Account<'info, SwapAuthorityBadge>,
 
     pub base_token_mint: InterfaceAccount<'info, Mint>,
 
@@ -38,8 +38,8 @@ pub struct SimpleWrappedSwap<'info> {
     #[account(mut)]
     pub protocol_quote_token_ata: InterfaceAccount<'info, TokenAccount>,
 
-    // Wrapper authority will sign the cpi call to the market and act as the market authority
-    pub wrapper_authority: Account<'info, WrapperAuthority>,
+    // Wrapper authority will sign the cpi call to the market and act as the swap authority
+    pub wrapper_authority: Account<'info, WrapperSwapAuthority>,
 
     pub user: Signer<'info>,
 
@@ -58,7 +58,7 @@ pub fn handler(
     other_amount_threshold: u64,
 ) -> Result<()> {
     let wrapper_authority_seeds: &[&[&[u8]]] = &[&[
-        &b"wrapper_authority"[..],
+        &b"wrapper_swap_authority"[..],
         &[ctx.accounts.wrapper_authority.bump],
     ]];
 
@@ -67,7 +67,7 @@ pub fn handler(
         PermissionedSwap {
             config: ctx.accounts.config.to_account_info(),
             market: ctx.accounts.market.to_account_info(),
-            market_authority: ctx.accounts.market_authority.to_account_info(),
+            swap_authority_badge: ctx.accounts.swap_authority_badge.to_account_info(),
             base_token_mint: ctx.accounts.base_token_mint.to_account_info(),
             quote_token_mint: ctx.accounts.quote_token_mint.to_account_info(),
             market_base_token_ata: ctx.accounts.market_base_token_ata.to_account_info(),
@@ -76,7 +76,7 @@ pub fn handler(
             user_quote_token_account: ctx.accounts.user_quote_token_account.to_account_info(),
             protocol_quote_token_ata: ctx.accounts.protocol_quote_token_ata.to_account_info(),
             referral_token_account: None,
-            authority: ctx.accounts.wrapper_authority.to_account_info(),
+            swap_authority: ctx.accounts.wrapper_authority.to_account_info(),
             user: ctx.accounts.user.to_account_info(),
             base_token_program: ctx.accounts.base_token_program.to_account_info(),
             quote_token_program: ctx.accounts.quote_token_program.to_account_info(),

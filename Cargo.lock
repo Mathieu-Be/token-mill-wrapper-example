@@ -2359,7 +2359,7 @@ checksum = "1f3ccbac311fea05f86f61904b462b55fb3df8837a366dfc601a0161d0532f20"
 [[package]]
 name = "token-mill"
 version = "0.1.0"
-source = "git+https://github.com/traderjoe-xyz/sol-token-mill-interface#ae4d380084321437e90b16700a1600635b8ac80c"
+source = "git+https://github.com/traderjoe-xyz/sol-token-mill-interface#006b5dbbba7edc7bf88c47c6c68264bcd8680682"
 dependencies = [
  "anchor-lang",
  "anchor-spl",

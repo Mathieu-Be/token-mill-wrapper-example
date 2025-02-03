@@ -1,8 +1,12 @@
 use anchor_lang::{prelude::*, solana_program::native_token::sol_to_lamports};
 use anchor_spl::token_interface::{Mint, TokenAccount, TokenInterface};
-use token_mill::{cpi::accounts::FreeMarket, program::TokenMill, state::Market};
+use token_mill::{
+    cpi::accounts::FreeMarket,
+    program::TokenMill,
+    state::{Market, SwapAuthorityBadge},
+};
 
-use crate::state::WrapperAuthority;
+use crate::state::WrapperSwapAuthority;
 
 #[event_cpi]
 #[derive(Accounts)]
@@ -13,7 +17,7 @@ pub struct Graduate<'info> {
     )]
     pub market: AccountLoader<'info, Market>,
 
-    pub market_authority: Account<'info, WrapperAuthority>,
+    pub swap_authority_badge: Account<'info, SwapAuthorityBadge>,
 
     pub quote_token_mint: InterfaceAccount<'info, Mint>,
 
@@ -25,8 +29,8 @@ pub struct Graduate<'info> {
     )]
     pub market_quote_token_ata: InterfaceAccount<'info, TokenAccount>,
 
-    // Wrapper authority will sign the cpi call to the market and act as the market authority
-    pub wrapper_authority: Account<'info, WrapperAuthority>,
+    // Wrapper authority will sign the cpi call to the market and act as the swap authority
+    pub wrapper_swap_authority: Account<'info, WrapperSwapAuthority>,
 
     pub signer: Signer<'info>,
 
@@ -41,16 +45,16 @@ pub fn handler(ctx: Context<Graduate>) -> Result<()> {
     assert!(ctx.accounts.market_quote_token_ata.amount >= sol_to_lamports(69_000.0));
 
     let wrapper_authority_seeds: &[&[&[u8]]] = &[&[
-        &b"wrapper_authority"[..],
-        &[ctx.accounts.wrapper_authority.bump],
+        &b"wrapper_swap_authority"[..],
+        &[ctx.accounts.wrapper_swap_authority.bump],
     ]];
 
     let context = CpiContext::new_with_signer(
         ctx.accounts.token_mill_program.to_account_info(),
         FreeMarket {
             market: ctx.accounts.market.to_account_info(),
-            market_authority: ctx.accounts.market_authority.to_account_info(),
-            authority: ctx.accounts.wrapper_authority.to_account_info(),
+            swap_authority_badge: ctx.accounts.swap_authority_badge.to_account_info(),
+            swap_authority: ctx.accounts.wrapper_swap_authority.to_account_info(),
             event_authority: ctx.accounts.event_authority.to_account_info(),
             program: ctx.accounts.token_mill_program.to_account_info(),
         },
