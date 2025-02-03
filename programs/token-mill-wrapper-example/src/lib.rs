@@ -35,20 +35,6 @@ pub mod token_mill_wrapper_example {
         )
     }
 
-    pub fn wrapped_buy_with_extra_fee(
-        ctx: Context<WrappedBuyWithExtraFee>,
-        swap_amount_type: SwapAmountType,
-        amount: u64,
-        other_amount_threshold: u64,
-    ) -> Result<()> {
-        instructions::wrapped_buy_with_extra_fee::handler(
-            ctx,
-            swap_amount_type,
-            amount,
-            other_amount_threshold,
-        )
-    }
-
     pub fn graduate(ctx: Context<Graduate>) -> Result<()> {
         instructions::graduate::handler(ctx)
     }
