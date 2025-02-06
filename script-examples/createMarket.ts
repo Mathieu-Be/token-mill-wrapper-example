@@ -54,9 +54,21 @@ const market = PublicKey.findProgramAddressSync(
 const marketBaseTokenAta = spl.getAssociatedTokenAddressSync(
   baseTokenMint,
   market,
-  true,
-  spl.TOKEN_2022_PROGRAM_ID
+  true
 );
+
+const metaplexProgramId = new PublicKey(
+  "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
+);
+
+const baseTokenMetadata = PublicKey.findProgramAddressSync(
+  [
+    Buffer.from("metadata"),
+    metaplexProgramId.toBuffer(),
+    baseTokenMint.toBuffer(),
+  ],
+  metaplexProgramId
+)[0];
 
 {
   // The create market instruction takes the following parameters:
@@ -70,14 +82,22 @@ const marketBaseTokenAta = spl.getAssociatedTokenAddressSync(
   // The transaction signer, also called "creator", will have admin rights over the market, allowing him to change the fee repartition, and claim the creator fees
   // Creator rights can be transferred
   const transaction = await program.methods
-    .createMarket("Test Market", "TM", "", new BN(1_000_000_000e6), 8_000, 0)
+    .createMarketWithSpl(
+      "Test Market",
+      "TM",
+      "",
+      new BN(1_000_000_000e6),
+      8_000,
+      0
+    )
     .accountsPartial({
       config,
       market,
       baseTokenMint,
+      baseTokenMetadata,
       marketBaseTokenAta,
-      quoteTokenBadge,
       quoteTokenMint,
+      quoteTokenBadge,
       creator: wallet.publicKey,
     })
     .signers([wallet.payer, baseTokenKeypair])

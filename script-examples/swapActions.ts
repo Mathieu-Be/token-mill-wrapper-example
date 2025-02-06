@@ -32,27 +32,33 @@ const marketBaseTokenAta = spl.getAssociatedTokenAddressSync(
   true
 );
 
-const userBaseTokenAta = spl.getAssociatedTokenAddressSync(
+// The script creates the token ATAs if necessary, but that can be done separately
+const userBaseTokenAta = await spl.getOrCreateAssociatedTokenAccount(
+  connection,
+  wallet.payer,
   baseTokenMint,
   wallet.publicKey,
   true
 );
 
-const marketQuoteTokenAta = spl.getAssociatedTokenAddressSync(
+const marketQuoteTokenAta = await spl.getOrCreateAssociatedTokenAccount(
+  connection,
+  wallet.payer,
   quoteTokenMint,
   market,
   true
 );
 
-const userQuoteTokenAta = spl.getAssociatedTokenAddressSync(
+const userQuoteTokenAta = await spl.getOrCreateAssociatedTokenAccount(
+  connection,
+  wallet.payer,
   quoteTokenMint,
   wallet.publicKey
 );
-
 // Protocol fees of the swap are sent to the set protocol fee recipient ATA
 const protocolQuoteTokenAta = spl.getAssociatedTokenAddressSync(
-  configAccount.protocolFeeRecipient,
-  wallet.publicKey
+  quoteTokenMint,
+  configAccount.protocolFeeRecipient
 );
 
 const u64Max = new BN(2).pow(new BN(64)).sub(new BN(1));
@@ -90,12 +96,12 @@ for (const action of swapActions) {
       baseTokenMint,
       quoteTokenMint,
       marketBaseTokenAta,
-      marketQuoteTokenAta,
-      userBaseTokenAccount: userBaseTokenAta,
-      userQuoteTokenAccount: userQuoteTokenAta,
+      marketQuoteTokenAta: marketQuoteTokenAta.address,
+      userBaseTokenAccount: userBaseTokenAta.address,
+      userQuoteTokenAccount: userQuoteTokenAta.address,
       protocolQuoteTokenAta,
       referralTokenAccount: program.programId,
-      authority: wallet.publicKey, // Would be the swap authority PDA in most cases
+      swapAuthority: wallet.publicKey, // Would be the swap authority PDA in most cases
       user: wallet.publicKey,
       baseTokenProgram: spl.TOKEN_PROGRAM_ID,
       quoteTokenProgram: spl.TOKEN_PROGRAM_ID,
@@ -124,8 +130,8 @@ for (const action of swapActions) {
     .accountsPartial({
       market,
       quoteTokenMint,
-      marketQuoteTokenAta,
-      creatorQuoteTokenAta: userQuoteTokenAta,
+      marketQuoteTokenAta: marketQuoteTokenAta.address,
+      creatorQuoteTokenAta: userQuoteTokenAta.address,
       creator: wallet.publicKey,
       quoteTokenProgram: spl.TOKEN_PROGRAM_ID,
     })
